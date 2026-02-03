@@ -255,11 +255,9 @@ instance (h : I.FG) : IsAdicComplete I (AdicCompletion I M) where
       property {m n} h' := by
         simp only [transitionMap_comp_eval_apply]
         specialize hx h'
-        rwa [← sub_smodEq_zero, SModEq, Quotient.mk_zero, Quotient.mk_eq_zero,
-          pow_smul_top_eq_eval_ker h, LinearMap.mem_ker, _root_.map_sub, sub_eq_zero, eval_apply,
-          eval_apply, eq_comm] at hx
+        rwa [SModEq.sub_mem, pow_smul_top_eq_eval_ker h, LinearMap.mem_ker, _root_.map_sub,
+          sub_eq_zero, eval_apply, eval_apply, eq_comm] at hx
     }
     use L; intro i
-    rw [← sub_smodEq_zero, SModEq, Quotient.mk_zero, Quotient.mk_eq_zero,
-      pow_smul_top_eq_eval_ker h, LinearMap.mem_ker, _root_.map_sub, sub_eq_zero]
+    rw [SModEq.sub_mem, pow_smul_top_eq_eval_ker h]
     simp [L]
