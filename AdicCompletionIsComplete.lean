@@ -13,26 +13,32 @@ public import Mathlib.RingTheory.Finiteness.Ideal
 /-!
 # Completeness of the Adic Completion for Finitely Generated Ideals
 
-This file establishes that the `I`-adic completion of an `R`-module `M` is itself `I`-adically
-complete when the ideal `I` is finitely generated.
+This file establishes that `AdicCompletion I M` is itself `I`-adically complete
+when the ideal `I` is finitely generated.
 
 ## Main definitions
 
-* `Submodule.powSmulQuotInclusion`: The canonical inclusion of quotients
-  `(I ^ m • M) / (I ^ (n - m) • (I ^ m • M)) \to M / I ^ n • M`.
-* `AdicCompletion.powSmulTopInclusion`: The canonical map between the adic completions
+* `Submodule.powSmulQuotInclusion`: The canonical inclusion from
+  `(I ^ m • M) / (I ^ (n - m) • (I ^ m • M))` to `M / I ^ n • M`.
+
+* `AdicCompletion.powSmulTopInclusion`: The canonical inclusion between the adic completions
   induced by the inclusion from `I ^ n • M` to `M`.
-* `AdicCompletion.liftOfValZero`: Given `x` in the adic completion of `M` projecting to zero
+
+* `AdicCompletion.liftOfValZero`: Given `x` in `AdicCompletion I M` projecting to zero
   in `M / I ^ n • M`, `liftOfValZero` constructs the corresponding element in
   the adic completion of `I ^ m • M`.
 
 ## Main results
 
 * `AdicCompletion.powSmulTopInclusion_range_eq_eval_ker`: The image of the adic completion
-  of `I ^ m • M` inside the adic completion of `M` is exactly the kernel of
-  the evaluation map `eval I M n`
+  of `I ^ m • M` inside `AdicCompletion I M` is exactly the kernel of the evaluation map
+  `eval I M n`.
+
+* `AdicCompletion.pow_smul_top_eq_eval_ker`: `I ^ n • AdicCompletion I M` is exact the kernel
+  of the evaluation map `eval I M n` when `I` is finitely generated.
+
 * `AdicCompletion.instIsAdicComplete`: The main instance showing that if `I` is finitely
-  generated, then `\widehat{M}` is `I`-adically complete.
+  generated, then `AdicCompletion I M` is `I`-adically complete.
 
 -/
 
@@ -261,6 +267,12 @@ theorem powSmulTopInclusion_liftOfValZero_apply {n : ℕ} {x : AdicCompletion I 
       auxLift_prop_3 I hx (i - n + n) i (by lia) (by lia) (by lia)]
   replace h : i ≤ n := by lia
   rw [powSmulTopInclusion_val_apply_eq_zero _ h, ← x.prop h, hx, _root_.map_zero]
+
+theorem powSmulQuotInclusion_liftOfValZero_val_apply {n i : ℕ} {x : AdicCompletion I M}
+    (hx : x.val n = 0) (hle : n ≤ i) :
+      powSmulQuotInclusion I M hle ((liftOfValZero I hx).val (i - n)) = x.val i := by
+  rw [← powSmulTopInclusion_val_apply_eq_powSmulQuotInclusion,
+    powSmulTopInclusion_liftOfValZero_apply]
 
 theorem powSmulTopInclusion_range_eq_eval_ker {n : ℕ} :
     (powSmulTopInclusion I M n).range.restrictScalars R = (eval I M n).ker := by
