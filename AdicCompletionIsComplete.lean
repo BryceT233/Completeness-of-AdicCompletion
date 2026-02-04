@@ -275,6 +275,7 @@ theorem pow_smul_top_eq_eval_ker {n : ℕ} (h : I.FG) : I ^ n • ⊤ = (eval I 
   exact ⟨u, by rw [powSmulTopInclusion, ← LinearMap.comp_apply, map_comp]; rfl⟩
 
 variable {I} in
+/-- `AdicCompletion I M` is complete when `I` is finitely generated. -/
 instance (h : I.FG) : IsAdicComplete I (AdicCompletion I M) where
   prec' x hx := by
     let L : AdicCompletion I M := {
