@@ -3,11 +3,40 @@ Copyright (c) 2026 Bingyu Xia. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Bingyu Xia
 -/
+module
 
-import Mathlib.Algebra.Lie.OfAssociative
-import Mathlib.LinearAlgebra.FreeProduct.Basic
-import Mathlib.RingTheory.AdicCompletion.Exactness
-import Mathlib.RingTheory.Finiteness.Ideal
+public import Mathlib.Algebra.Lie.OfAssociative
+public import Mathlib.LinearAlgebra.FreeProduct.Basic
+public import Mathlib.RingTheory.AdicCompletion.Exactness
+public import Mathlib.RingTheory.Finiteness.Ideal
+
+/-!
+# Completeness of the Adic Completion for Finitely Generated Ideals
+
+This file establishes that the `I`-adic completion of an `R`-module `M` is itself `I`-adically
+complete when the ideal `I` is finitely generated.
+
+## Main definitions
+
+* `Submodule.powSmulQuotInclusion`: The canonical inclusion of quotients
+  `(I ^ m • M) / (I ^ (n - m) • (I ^ m • M)) \to M / I ^ n • M`.
+* `AdicCompletion.powSmulTopInclusion`: The canonical map between the adic completions
+  induced by the inclusion from `I ^ n • M` to `M`.
+* `AdicCompletion.liftOfValZero`: Given `x` in the adic completion of `M` projecting to zero
+  in `M / I ^ n • M`, `liftOfValZero` constructs the corresponding element in
+  the adic completion of `I ^ m • M`.
+
+## Main results
+
+* `AdicCompletion.powSmulTopInclusion_range_eq_eval_ker`: The image of the adic completion
+  of `I ^ m • M` inside the adic completion of `M` is exactly the kernel of
+  the evaluation map `eval I M n`
+* `AdicCompletion.instIsAdicComplete`: The main instance showing that if `I` is finitely
+  generated, then `\widehat{M}` is `I`-adically complete.
+
+-/
+
+public section
 
 noncomputable section
 
@@ -226,8 +255,7 @@ def liftOfValZero {n : ℕ} {x : AdicCompletion I M} (hx : x.val n = 0) :
 @[simp]
 theorem powSmulTopInclusion_liftOfValZero_apply {n : ℕ} {x : AdicCompletion I M}
     (hx : x.val n = 0) : powSmulTopInclusion I M n (liftOfValZero I hx) = x := by
-  ext i
-  by_cases h : n ≤ i
+  ext i; by_cases h : n ≤ i
   · rw [powSmulTopInclusion_val_apply_eq_powSmulQuotInclusion _ h]
     simp only [← auxLift_prop_1 I hx h, liftOfValZero,
       auxLift_prop_3 I hx (i - n + n) i (by lia) (by lia) (by lia)]
