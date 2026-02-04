@@ -130,7 +130,7 @@ lemma val_apply_mem_smul_top_iff {m n : ℕ} {x : AdicCompletion I M}
   simpa [ker_liftQ]
 
 open scoped Pointwise in
-theorem set_smul_top_eq_of_restrictScalars_image_smul_top {s : Set R} :
+theorem set_smul_top_eq_restrictScalars_image_smul_top {s : Set R} :
     (s • ⊤ : Submodule R (AdicCompletion I M)) = ((of I R) '' s • ⊤ :
       Submodule (AdicCompletion I R) (AdicCompletion I M)).restrictScalars R := by
   refine le_antisymm (set_smul_le _ _ _ fun r x r_in _ ↦ ?_) ?_
@@ -258,7 +258,7 @@ theorem pow_smul_top_eq_eval_ker {n : ℕ} (h : I.FG) : I ^ n • ⊤ = (eval I 
   replace h := Ideal.FG.pow (n := n) h
   rcases h with ⟨s, hs⟩
   simp only [← hs, span_smul_eq]
-  rw [set_smul_top_eq_of_restrictScalars_image_smul_top, ← powSmulTopInclusion_range_eq_eval_ker,
+  rw [set_smul_top_eq_restrictScalars_image_smul_top, ← powSmulTopInclusion_range_eq_eval_ker,
     restrictScalars_le, image_smul_top_eq_range_directSum]
   simp only [SetLike.coe_sort_coe, ← map_lsmul_eq_lsmul_of, ← map_toModule_sum_eq_toModule_map]
   rw [LinearMap.range_comp_of_range_eq_top _ (LinearMap.range_eq_top_of_surjective _ <|
