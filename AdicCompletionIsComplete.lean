@@ -136,6 +136,28 @@ theorem smul_top_eq_range_directSum (s : Set R) : (s • ⊤ : Submodule R M) =
     (DirectSum.toModule R s M (fun r ↦ LinearMap.lsmul R M r.val)).range := by
   simpa using image_smul_top_eq_range_directSum (M := M) s id
 
+open scoped Pointwise in
+theorem set_smul_top_eq_restrictScalars_image_smul_top {S M : Type*} (R : Type*) [CommSemiring R]
+    [AddCommMonoid M] [CommSemiring S] [Module S M] [Module R M] [Algebra S R]
+      [IsScalarTower S R M] (s : Set S) : (s • ⊤ : Submodule S M) =
+        ((algebraMap S R) '' s • ⊤ : Submodule R M).restrictScalars S := by
+  refine le_antisymm (set_smul_le _ _ _ fun r x r_in _ ↦ ?_) ?_
+  · rw [restrictScalars_mem, ← IsScalarTower.algebraMap_smul R r]
+    exact mem_set_smul_of_mem_mem (Set.mem_image_of_mem _ r_in) mem_top
+  intro x x_in
+  rw [restrictScalars_mem] at x_in
+  refine set_smul_inductionOn x x_in ?_ ?_ (fun _ _ _ _ h h' ↦  add_mem h h') (zero_mem _)
+  · rintro _ x ⟨r, r_in, rfl⟩ _
+    rw [IsScalarTower.algebraMap_smul R r]
+    exact mem_set_smul_of_mem_mem r_in mem_top
+  · intro r x h h'
+    obtain ⟨c, c_supp, hc⟩ := (mem_set_smul ..).mp <| smul_mem _ r h
+    simp only [hc, Finsupp.sum, AddSubmonoidClass.coe_finset_sum, SetLike.val_smul]
+    refine sum_mem fun u u_in ↦ ?_
+    obtain ⟨u, u_in', rfl⟩ := c_supp (Finset.mem_coe.mpr u_in)
+    rw [IsScalarTower.algebraMap_smul]
+    exact mem_set_smul_of_mem_mem u_in' mem_top
+
 end Submodule
 
 namespace AdicCompletion
@@ -163,29 +185,6 @@ lemma val_apply_mem_smul_top_iff {m n : ℕ} {x : AdicCompletion I M}
   refine ⟨fun h ↦ ?_, fun h ↦ by simpa [mapQ, h, ← LinearMap.mem_ker, ker_liftQ] using x.prop m_ge⟩
   rw [← x.prop m_ge, transitionMap, factorPow, factor, mapQ, ← LinearMap.mem_ker]
   simpa [ker_liftQ]
-
-open scoped Pointwise in
-theorem set_smul_top_eq_restrictScalars_image_smul_top {s : Set R} :
-    (s • ⊤ : Submodule R (AdicCompletion I M)) = ((of I R) '' s • ⊤ :
-      Submodule (AdicCompletion I R) (AdicCompletion I M)).restrictScalars R := by
-  refine le_antisymm (set_smul_le _ _ _ fun r x r_in _ ↦ ?_) ?_
-  · rw [restrictScalars_mem, smul_eq_of_smul]
-    exact mem_set_smul_of_mem_mem (Set.mem_image_of_mem _ r_in) mem_top
-  intro x x_in
-  rw [restrictScalars_mem] at x_in
-  refine set_smul_inductionOn x x_in ?_ ?_ ?_ (zero_mem _)
-  · rintro _ x ⟨r, r_in, rfl⟩ _
-    rw [← smul_eq_of_smul]
-    exact mem_set_smul_of_mem_mem r_in mem_top
-  · intro r x h h'
-    obtain ⟨c, c_supp, hc⟩ := (mem_set_smul ..).mp <| smul_mem _ r h
-    simp only [hc, Finsupp.sum, AddSubmonoidClass.coe_finset_sum, SetLike.val_smul]
-    refine sum_mem fun u u_in ↦ ?_
-    obtain ⟨u, u_in', rfl⟩ := c_supp (Finset.mem_coe.mpr u_in)
-    rw [← smul_eq_of_smul]
-    exact mem_set_smul_of_mem_mem u_in' mem_top
-  · intro _ _ _ _ h h'
-    exact add_mem h h'
 
 variable (M) in
 /-- The canonical inclusion from the `I`-adic completion of `I ^ n • M` to
@@ -268,7 +267,7 @@ theorem powSmulTopInclusion_liftOfValZero_apply {n : ℕ} {x : AdicCompletion I 
   ext i; by_cases h : n ≤ i
   · rw [powSmulTopInclusion_val_apply_eq_powSmulQuotInclusion _ h]
     simp only [← liftOfValZeroAux_prop_1 I hx h, liftOfValZero,
-      liftOfValZeroAux_prop_3 I hx (i - n + n) i (by lia) (by lia) (by lia)]
+      liftOfValZeroAux_prop_3 I hx (i - n + n) i (by lia) h (by lia)]
   replace h : i ≤ n := by lia
   rw [powSmulTopInclusion_val_apply_eq_zero _ h, ← x.prop h, hx, _root_.map_zero]
 
@@ -302,7 +301,8 @@ theorem pow_smul_top_eq_eval_ker {n : ℕ} (h : I.FG) : I ^ n • ⊤ = (eval I 
   replace h := Ideal.FG.pow (n := n) h
   rcases h with ⟨s, hs⟩
   simp only [← hs, span_smul_eq]
-  rw [set_smul_top_eq_restrictScalars_image_smul_top, ← powSmulTopInclusion_range_eq_eval_ker,
+  rw [set_smul_top_eq_restrictScalars_image_smul_top (AdicCompletion I R), show
+    ⇑(algebraMap R (AdicCompletion I R)) = of I R by rfl, ← powSmulTopInclusion_range_eq_eval_ker,
     restrictScalars_le, image_smul_top_eq_range_directSum]
   simp only [SetLike.coe_sort_coe, ← map_lsmul_eq_lsmul_of, ← map_toModule_sum_eq_toModule_map]
   rw [LinearMap.range_comp_of_range_eq_top _ (LinearMap.range_eq_top_of_surjective _ <|
