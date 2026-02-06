@@ -112,7 +112,7 @@ theorem image_smul_top_eq_range_directSum {σ : Type*} (s : Set σ) (f : σ → 
   · rw [← h]; apply DirectSum.induction_lon (R := R) c
     · simp
     · intro ⟨r, r_in⟩ x
-      simpa using mem_set_smul_of_mem_mem (show f r ∈ f '' s by use r) mem_top
+      simpa using mem_set_smul_of_mem_mem (Set.mem_image_of_mem _ r_in) mem_top
     · intro _ _ h h'
       simpa using add_mem h h'
 
