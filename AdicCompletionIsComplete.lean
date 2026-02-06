@@ -21,7 +21,7 @@ when the ideal `I` is finitely generated.
 * `Submodule.powSmulQuotInclusion`: The canonical inclusion from
   `(I ^ a • M) / I ^ b • (I ^ a • M)` to `M / I ^ c • M` when `c = a + b`.
 
-* `AdicCompletion.powSmulTopInclusion`: The canonical inclusion between the adic completions
+* `AdicCompletion.powSmulTopInclusion`: The canonical inclusion between adic completions
   induced by the inclusion from `I ^ n • M` to `M`.
 
 * `AdicCompletion.liftOfValZero`: Given `x` in `AdicCompletion I M` projecting to zero
@@ -77,11 +77,6 @@ theorem factorPow_powSmulQuotInclusion_comm {a b c d e : ℕ} (h : c = a + b) (h
       = (powSmulQuotInclusion I M h) ∘ₗ
         (factorPow I ↥(I ^ a • ⊤ : Submodule R M) (Nat.le_add_right b d)) := by
   ext; rfl
-
-theorem factorPow_powSmulQuotInclusion_eq_zero {a b c d e : ℕ} (h : c = a + b) (h' : e = c + d) :
-    (factorPow I M (show a ≤ e by lia)) ∘ₗ (powSmulQuotInclusion I M h') = 0 := by
-  ext ⟨t, _⟩; revert t
-  simpa [powSmulQuotInclusion, ← SetLike.le_def] using pow_smul_top_le _ _ (by lia)
 
 theorem powSmulQuotInclusion_range {a b c : ℕ} (h : c = a + b) :
     (powSmulQuotInclusion I M h).range = I ^ a • ⊤ := by
@@ -224,10 +219,9 @@ def liftOfValZero {n : ℕ} {x : AdicCompletion I M} (hxn : x.val n = 0) :
   val i := liftOfValZeroAux I (Eq.refl (n + i)) hxn
   property {i j} h := by
     obtain ⟨k, rfl⟩ := Nat.exists_eq_add_of_le h
-    rw [transitionMap, ← (powSmulQuotInclusion_injective I (by rfl)).eq_iff,
-      liftOfValZeroAux_prop, ← LinearMap.comp_apply,
-      ← factorPow_powSmulQuotInclusion_comm I (by rfl) (show n + (i + k) = n + i + k by ring),
-      LinearMap.comp_apply, liftOfValZeroAux_prop, ← transitionMap]
+    rw [← (powSmulQuotInclusion_injective I (by rfl)).eq_iff, liftOfValZeroAux_prop,
+      ← LinearMap.comp_apply, ← factorPow_powSmulQuotInclusion_comm I (by rfl)
+      (show n + (i + k) = n + i + k by ring), LinearMap.comp_apply, liftOfValZeroAux_prop]
     exact x.prop (by lia)
 
 @[simp]
