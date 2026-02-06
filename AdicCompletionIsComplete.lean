@@ -19,7 +19,7 @@ when the ideal `I` is finitely generated.
 ## Main definitions
 
 * `Submodule.powSmulQuotInclusion`: The canonical inclusion from
-  `(I ^ m • M) / I ^ (n - m) • (I ^ m • M)` to `M / I ^ n • M`.
+  `(I ^ a • M) / I ^ b • (I ^ a • M)` to `M / I ^ c • M` when `c = a + b`.
 
 * `AdicCompletion.powSmulTopInclusion`: The canonical inclusion between the adic completions
   induced by the inclusion from `I ^ n • M` to `M`.
@@ -52,54 +52,49 @@ variable {M : Type*} [AddCommGroup M] [Module R M]
 namespace Submodule
 
 variable (M) in
-/-- The canonical inclusion from `I ^ m • M ⧸ I ^ (n - m) • (I ^ m • M)` to `M ⧸ I ^ n • M`. -/
-def powSmulQuotInclusion {m n : ℕ} (h : m ≤ n) := liftQ (I ^ (n - m) •
-  ⊤ : Submodule R ↥(I ^ m • (⊤ : Submodule R M))) ((mkQ (I ^ n • ⊤)).comp <| topEquiv.comp <|
-    inclusion (le_top (a := I ^ m • (⊤ : Submodule R M)))) (by
-      suffices ∀ r ∈ I ^ (n - m), ∀ t ∈ I ^ m • ⊤, r • t ∈ I ^ n • ⊤ by
+/-- The canonical inclusion from `I ^ a • M ⧸ I ^ b • (I ^ a • M)` to `M ⧸ I ^ c • M`
+when `c = a + b`. -/
+def powSmulQuotInclusion {a b c : ℕ} (h : c = a + b) := liftQ (I ^ b •
+  ⊤ : Submodule R ↥(I ^ a • (⊤ : Submodule R M))) ((mkQ (I ^ c • ⊤)).comp <| topEquiv.comp <|
+    inclusion (le_top (a := I ^ a • (⊤ : Submodule R M)))) (by
+      suffices ∀ r ∈ I ^ b, ∀ t ∈ I ^ a • ⊤, r • t ∈ I ^ c • ⊤ by
         simpa [smul_le, ← Quotient.mk_smul]
       intro r r_in t t_in
-      rw [show n = n - m + m by lia, pow_add, ← smul_smul]
+      rw [h, Nat.add_comm, pow_add, ← smul_smul]
       exact smul_mem_smul r_in t_in)
 
-theorem powSmulQuotInclusion_injective {m n : ℕ} (h : m ≤ n) :
+theorem powSmulQuotInclusion_injective {a b c : ℕ} (h : c = a + b) :
     Function.Injective (powSmulQuotInclusion I M h) := by
   rw [powSmulQuotInclusion, ← LinearMap.ker_eq_bot, ker_liftQ, eq_bot_iff, SetLike.le_def]
   simp only [mem_map, LinearMap.mem_ker, LinearMap.coe_comp, LinearEquiv.coe_coe,
     Function.comp_apply, topEquiv_apply, coe_inclusion, mkQ_apply, Quotient.mk_eq_zero,
     Subtype.exists, exists_and_left, mem_bot, forall_exists_index, and_imp]
   intro _ _ _ _ h'
-  rwa [← h', Quotient.mk_eq_zero, mem_smul_top_iff, smul_smul, ← pow_add, Nat.sub_add_cancel h]
+  rwa [← h', Quotient.mk_eq_zero, mem_smul_top_iff, smul_smul, ← pow_add, Nat.add_comm, ← h]
 
-theorem factorPow_powSmulQuotInclusion_comm {m n p : ℕ} (hmn : m ≤ n) (hnp : n ≤ p) :
-    (factorPow I M hnp) ∘ₗ (powSmulQuotInclusion I M (hmn.trans hnp)) =
-      (powSmulQuotInclusion I M hmn) ∘ₗ (factorPow I ↥(I ^ m • ⊤ : Submodule R M)
-        (Nat.sub_le_sub_right hnp m)) := by
+theorem factorPow_powSmulQuotInclusion_comm {a b c d e : ℕ} (h : c = a + b) (h' : e = c + d) :
+    (factorPow I M (show c ≤ e by lia)) ∘ₗ (powSmulQuotInclusion I M (show e = a + (b + d) by lia))
+      = (powSmulQuotInclusion I M h) ∘ₗ
+        (factorPow I ↥(I ^ a • ⊤ : Submodule R M) (Nat.le_add_right b d)) := by
   ext; rfl
 
-theorem factorPow_powSmulQuotInclusion_comm_apply {m n p : ℕ} (hmn : m ≤ n) (hnp : n ≤ p) {x} :
-    (factorPow I M hnp) ((powSmulQuotInclusion I M (hmn.trans hnp)) x) =
-      (powSmulQuotInclusion I M hmn) ((factorPow I ↥(I ^ m • ⊤ : Submodule R M)
-        (Nat.sub_le_sub_right hnp m) x)) := by
-  simpa using LinearMap.ext_iff.mp (factorPow_powSmulQuotInclusion_comm ..) x
-
-theorem factorPow_comp_powSmulQuotInclusion_eq_zero {m n p : ℕ} (hmn : m ≤ n) (hnp : n ≤ p) :
-    (factorPow I M (hmn.trans hnp)) ∘ₗ (powSmulQuotInclusion I M hnp) = 0 := by
+theorem factorPow_powSmulQuotInclusion_eq_zero {a b c d e : ℕ} (h : c = a + b) (h' : e = c + d) :
+    (factorPow I M (show a ≤ e by lia)) ∘ₗ (powSmulQuotInclusion I M h') = 0 := by
   ext ⟨t, _⟩; revert t
   simpa [powSmulQuotInclusion, ← SetLike.le_def] using pow_smul_top_le _ _ (by lia)
 
-theorem powSmulQuotInclusion_range {m n : ℕ} (h : m ≤ n) :
-    (powSmulQuotInclusion I M h).range = I ^ m • ⊤ := by
-  have : Function.Surjective ((I ^ n • ⊤ : Submodule R M).mkQ ∘ₗ
-    topEquiv (R := R) (M := M) : ↥(⊤ : Submodule R M) →ₗ[R] M ⧸ I ^ n • ⊤) := by
-    simpa using mkQ_surjective (I ^ n • ⊤)
+theorem powSmulQuotInclusion_range {a b c : ℕ} (h : c = a + b) :
+    (powSmulQuotInclusion I M h).range = I ^ a • ⊤ := by
+  have : Function.Surjective ((I ^ c • ⊤ : Submodule R M).mkQ ∘ₗ
+    topEquiv (R := R) (M := M) : ↥(⊤ : Submodule R M) →ₗ[R] M ⧸ I ^ c • ⊤) := by
+    simpa using mkQ_surjective (I ^ c • ⊤)
   rw [powSmulQuotInclusion, range_liftQ, LinearMap.range_comp, LinearMap.range_comp,
-    range_inclusion, ← map_comp, ← map_comap_eq_of_surjective this (I ^ m • ⊤)]
+    range_inclusion, ← map_comp, ← map_comap_eq_of_surjective this (I ^ a • ⊤)]
   congr 1; ext ⟨t, _⟩
   simp only [mem_comap, subtype_apply, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
     topEquiv_apply]
-  rw [← mem_comap, ← sup_eq_right.mpr (pow_smul_top_le I M h), ← comap_map_mkQ, map_smul'',
-    map_top, range_mkQ]
+  rw [← mem_comap, ← sup_eq_right.mpr (pow_smul_top_le I M (show a ≤ c by lia)), ← comap_map_mkQ,
+    map_smul'', map_top, range_mkQ]
 
 theorem factor_quotEquivOfEq_comm {p p' q q' : Submodule R M} (heq : p = p') (heq' : q = q')
     (hle : p ≤ q) : (quotEquivOfEq q q' heq') ∘ₗ (factor hle) =
@@ -192,6 +187,13 @@ the `I`-adic completion of `M`. -/
 def powSmulTopInclusion (n : ℕ) := (AdicCompletion.map I (topEquiv.toLinearMap ∘ₗ
     ((I ^ n • (⊤ : Submodule R M)).inclusion le_top)))
 
+theorem powSmulTopInclusion_val_apply {a b c : ℕ} (h : c = a + b)
+    {x : AdicCompletion I ↥(I ^ a • ⊤ : Submodule R M)} : (powSmulTopInclusion I M a x).val c =
+      powSmulQuotInclusion I M h (x.val b) := by
+  rw [← x.prop (show b ≤ c by lia), powSmulTopInclusion, map_val_apply]
+  refine Quotient.induction_on _ (x.val c) fun z ↦ ?_
+  simp [powSmulQuotInclusion]
+
 theorem powSmulTopInclusion_val_apply_eq_zero {n i : ℕ} (h : i ≤ n)
     {x : AdicCompletion I ↥(I ^ n • ⊤ : Submodule R M)} :
       (powSmulTopInclusion I M n x).val i = 0 := by
@@ -199,83 +201,53 @@ theorem powSmulTopInclusion_val_apply_eq_zero {n i : ℕ} (h : i ≤ n)
   refine Quotient.induction_on _ (x.val i) fun z ↦ ?_
   simpa using pow_smul_top_le _ _ h z.prop
 
-theorem powSmulTopInclusion_val_apply_eq_powSmulQuotInclusion {n i : ℕ} (h : n ≤ i)
-    {x : AdicCompletion I ↥(I ^ n • ⊤ : Submodule R M)} : (powSmulTopInclusion I M n x).val i =
-      powSmulQuotInclusion I M h (x.val (i - n)) := by
-  rw [← x.prop (Nat.sub_le i n), powSmulTopInclusion, map_val_apply]
-  refine Quotient.induction_on _ (x.val i) fun z ↦ ?_
-  simp [powSmulQuotInclusion]
-
 theorem powSmulTopInclusion_injective (n : ℕ) :
     Function.Injective (powSmulTopInclusion I M n) := by
   rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
   intro x hx; ext i
   simp only [AdicCompletion.ext_iff, val_zero, Pi.zero_apply] at hx
   specialize hx (i + n)
-  rw [powSmulTopInclusion_val_apply_eq_powSmulQuotInclusion _ (by lia),
+  rw [powSmulTopInclusion_val_apply I (by rw [add_comm]),
     LinearMap.map_eq_zero_iff _ (powSmulQuotInclusion_injective ..)] at hx
-  rw [← x.prop (show i ≤ i + n - n by simp), hx, _root_.map_zero, val_zero, Pi.zero_apply]
+  simp [hx]
 
-private lemma liftOfValZeroAux_exists {m n : ℕ} {x : AdicCompletion I M} (h : x.val n = 0)
-    (m_ge : n ≤ m) : ∃ t, powSmulQuotInclusion I M m_ge t = x.val m := by
+private lemma liftOfValZeroAux_exists {a b c : ℕ} {x : AdicCompletion I M} (h : c = a + b)
+    (ha : x.val a = 0) : ∃ t, powSmulQuotInclusion I M h t = x.val c := by
   simpa [← LinearMap.mem_range, powSmulQuotInclusion_range] using
-    (val_apply_mem_smul_top_iff I m_ge).mpr h
+    (val_apply_mem_smul_top_iff I (show a ≤ c by lia)).mpr ha
 
 /-- An auxillary lift function used in the definition of `liftOfValZero`.
 Use `liftOfValZero` instead. -/
-def liftOfValZeroAux {m n : ℕ} {x : AdicCompletion I M} (h : x.val n = 0) (m_ge : n ≤ m) :
-    ↥(I ^ n • ⊤ : Submodule R M) ⧸ I ^ (m - n) • (⊤ : Submodule R ↥(I ^ n • ⊤ : Submodule R M)) :=
-  Exists.choose (liftOfValZeroAux_exists I h m_ge)
+def liftOfValZeroAux {a b c : ℕ} {x : AdicCompletion I M} (h : c = a + b) (ha : x.val a = 0) :
+    ↥(I ^ a • ⊤ : Submodule R M) ⧸ I ^ b • (⊤ : Submodule R ↥(I ^ a • ⊤ : Submodule R M)) :=
+  Exists.choose (liftOfValZeroAux_exists I h ha)
 
-private lemma liftOfValZeroAux_prop_1 {m n : ℕ} {x : AdicCompletion I M} (h : x.val n = 0)
-    (m_ge : n ≤ m) : (powSmulQuotInclusion I M m_ge) (liftOfValZeroAux I h m_ge) = x.val m :=
-  Exists.choose_spec (liftOfValZeroAux_exists I h m_ge)
-
-private lemma liftOfValZeroAux_prop_2 {i j n : ℕ} {x : AdicCompletion I M} (h : x.val n = 0)
-    (h' : i ≤ j) : factorPow I _ (show i + n - n ≤ j + n - n by simpa)
-      (liftOfValZeroAux I h (Nat.le_add_left n j)) =
-        liftOfValZeroAux I h (Nat.le_add_left n i) := by
-    rw [← (powSmulQuotInclusion_injective I (by lia)).eq_iff, liftOfValZeroAux_prop_1,
-      ← factorPow_powSmulQuotInclusion_comm_apply I _ (by lia), liftOfValZeroAux_prop_1,
-      ← transitionMap, x.prop (by lia)]
-
-private lemma liftOfValZeroAux_prop_3 {n : ℕ} {x : AdicCompletion I M} (h : x.val n = 0) (m m' : ℕ)
-    (hle : n ≤ m) (hle' : n ≤ m') (heq : m = m') : quotEquivOfEq _ _ (by rw [heq])
-      (liftOfValZeroAux I h hle) = (liftOfValZeroAux I h hle') := by
-  subst heq
-  induction liftOfValZeroAux I h hle using Quotient.induction_on
-  rfl
+private lemma liftOfValZeroAux_prop {a b c : ℕ} {x : AdicCompletion I M} (h : c = a + b)
+    (ha : x.val a = 0) : (powSmulQuotInclusion I M h) (liftOfValZeroAux I h ha) = x.val c :=
+  Exists.choose_spec (liftOfValZeroAux_exists I h ha)
 
 /-- Given an element `x` in the adic completion of `M` whose projection to `M / I ^ n • M` is zero,
 `liftOfValZero` constructs the corresponding element in the adic completion of `I ^ n • M`. -/
 @[no_expose]
-def liftOfValZero {n : ℕ} {x : AdicCompletion I M} (hx : x.val n = 0) :
+def liftOfValZero {n : ℕ} {x : AdicCompletion I M} (hxn : x.val n = 0) :
     AdicCompletion I ↥(I ^ n • (⊤ : Submodule R M)) where
-  val i := quotEquivOfEq _ _ (by rw [Nat.add_sub_cancel]) <|
-    liftOfValZeroAux I hx (Nat.le_add_left n i)
+  val i := liftOfValZeroAux I (Eq.refl (n + i)) hxn
   property {i j} h := by
-    simp only
-    rw [← factor_quotEquivOfEq_comm_apply (show (I ^ (j + n - n) • ⊤ : Submodule R ↥(I ^ n • ⊤ :
-      Submodule R M)) = I ^ j • ⊤ by simp) (show I ^ (i + n - n) • ⊤ = I ^ i • ⊤ by simp) (by
-        simpa using pow_smul_top_le I _ h), ← factorPow]
-    · rwa [liftOfValZeroAux_prop_2 I]
-    simpa
+    obtain ⟨k, rfl⟩ := Nat.exists_eq_add_of_le h
+    rw [transitionMap, ← (powSmulQuotInclusion_injective I (by rfl)).eq_iff,
+      liftOfValZeroAux_prop, ← LinearMap.comp_apply,
+      ← factorPow_powSmulQuotInclusion_comm I (by rfl) (show n + (i + k) = n + i + k by ring),
+      LinearMap.comp_apply, liftOfValZeroAux_prop, ← transitionMap]
+    exact x.prop (by lia)
 
 @[simp]
 theorem powSmulTopInclusion_liftOfValZero_apply {n : ℕ} {x : AdicCompletion I M}
-    (hx : x.val n = 0) : powSmulTopInclusion I M n (liftOfValZero I hx) = x := by
+    (hxn : x.val n = 0) : powSmulTopInclusion I M n (liftOfValZero I hxn) = x := by
   ext i; by_cases h : n ≤ i
-  · rw [powSmulTopInclusion_val_apply_eq_powSmulQuotInclusion _ h]
-    simp only [← liftOfValZeroAux_prop_1 I hx h, liftOfValZero,
-      liftOfValZeroAux_prop_3 I hx (i - n + n) i (by lia) h (by lia)]
+  · obtain ⟨k, rfl⟩ := Nat.exists_eq_add_of_le h
+    rw [powSmulTopInclusion_val_apply _ (by rfl), liftOfValZero, liftOfValZeroAux_prop]
   replace h : i ≤ n := by lia
-  rw [powSmulTopInclusion_val_apply_eq_zero _ h, ← x.prop h, hx, _root_.map_zero]
-
-theorem powSmulQuotInclusion_liftOfValZero_val_apply {n i : ℕ} {x : AdicCompletion I M}
-    (hx : x.val n = 0) (hle : n ≤ i) :
-      powSmulQuotInclusion I M hle ((liftOfValZero I hx).val (i - n)) = x.val i := by
-  rw [← powSmulTopInclusion_val_apply_eq_powSmulQuotInclusion,
-    powSmulTopInclusion_liftOfValZero_apply]
+  rw [powSmulTopInclusion_val_apply_eq_zero _ h, ← x.prop h, hxn, _root_.map_zero]
 
 theorem powSmulTopInclusion_range_eq_eval_ker {n : ℕ} :
     (powSmulTopInclusion I M n).range.restrictScalars R = (eval I M n).ker := by
