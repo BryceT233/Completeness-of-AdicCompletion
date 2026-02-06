@@ -96,16 +96,6 @@ theorem powSmulQuotInclusion_range {a b c : ℕ} (h : c = a + b) :
   rw [← mem_comap, ← sup_eq_right.mpr (pow_smul_top_le I M (show a ≤ c by lia)), ← comap_map_mkQ,
     map_smul'', map_top, range_mkQ]
 
-theorem factor_quotEquivOfEq_comm {p p' q q' : Submodule R M} (heq : p = p') (heq' : q = q')
-    (hle : p ≤ q) : (quotEquivOfEq q q' heq') ∘ₗ (factor hle) =
-      (factor (show p' ≤ q' by rwa [← heq, ← heq'])) ∘ₗ (quotEquivOfEq p p' heq) := by
-  ext; rfl
-
-lemma factor_quotEquivOfEq_comm_apply {p p' q q' : Submodule R M} (heq : p = p') (heq' : q = q')
-    (hle : p ≤ q) {x} : (quotEquivOfEq q q' heq') ((factor hle) x) =
-      factor (show p' ≤ q' by rwa [← heq, ← heq']) ((quotEquivOfEq p p' heq) x) := by
-  simpa using LinearMap.ext_iff.mp (factor_quotEquivOfEq_comm ..) x
-
 open Pointwise Classical in
 theorem image_smul_top_eq_range_directSum {σ : Type*} (s : Set σ) (f : σ → R) :
     (f '' s • ⊤ : Submodule R M) =
